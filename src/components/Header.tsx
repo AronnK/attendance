@@ -7,15 +7,14 @@ import {
 } from "@radix-ui/react-menubar";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleRoute = (className: string) => {
-    console.log(`Routing to /datatable?class=${className}`);
-    router.push(`/datatable?class=${className}`);
+  const handleRoute = (mentorName: string) => {
+    console.log(`Routing to /datatable?mentor=${mentorName}`);
+    router.push(`/datatable?mentor=${mentorName}`);
   };
 
   return (
@@ -33,24 +32,29 @@ export default function Header() {
             <MenubarMenu>
               <MenubarTrigger>AIDS</MenubarTrigger>
               <MenubarContent className="bg-white text-black mt-6 p-4 rounded-lg shadow-lg w-60">
-                <MenubarItem onClick={() => handleRoute("AIDS-A")}>
-                  AIDS - A
+                <MenubarItem onClick={() => handleRoute("mentor1")}>
+                  Mentor 1
                 </MenubarItem>
-                <MenubarItem onClick={() => handleRoute("AIDS-B")}>
-                  AIDS - B
+                <MenubarItem onClick={() => handleRoute("mentor2")}>
+                  Mentor 2
                 </MenubarItem>
               </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
               <MenubarTrigger>CSE</MenubarTrigger>
               <MenubarContent className="bg-white text-black mt-6 p-4 rounded-lg shadow-lg w-60">
-                <MenubarItem>CSE - A</MenubarItem>
-                <MenubarItem>CSE - B</MenubarItem>
-                <MenubarItem>CSE - C</MenubarItem>
+                <MenubarItem onClick={() => handleRoute("mentor3")}>
+                  Mentor 3
+                </MenubarItem>
+                <MenubarItem onClick={() => handleRoute("mentor4")}>
+                  Mentor 4
+                </MenubarItem>
               </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>IT</MenubarTrigger>
+              <MenubarTrigger onClick={() => handleRoute("mentor5")}>
+                IT
+              </MenubarTrigger>
             </MenubarMenu>
           </Menubar>
         )}

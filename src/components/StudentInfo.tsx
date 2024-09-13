@@ -15,9 +15,6 @@ import {
 } from "@/components/ui/card";
 import { format } from "date-fns"; // Utility for formatting dates
 
-// Dummy data for leave dates (in the correct format)
-const dummyLeaveDates = ["2024-09-10", "2024-09-15", "2024-09-20"];
-
 type Student = {
   id: string;
   name: string;
@@ -30,14 +27,13 @@ interface StudentInfoProps {
   isOpen: boolean;
   onClose: () => void;
   student: Student | null;
-  leaveDays?: string[]; // Optional leave days
+  leaveDates?: string[]; // Optional leave days
 }
 
 const StudentInfo: React.FC<StudentInfoProps> = ({
   isOpen,
   onClose,
   student,
-  leaveDays = dummyLeaveDates, // Default to dummy leave days
 }) => {
   // Format leave days to "dd-mm" format
   const formattedLeaveDates =
