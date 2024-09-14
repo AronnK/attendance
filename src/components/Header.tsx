@@ -7,6 +7,7 @@ import {
 } from "@radix-ui/react-menubar";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { generateSummaryPDF } from "./exportSummary";
 
 export default function Header() {
   const router = useRouter();
@@ -15,6 +16,14 @@ export default function Header() {
   const handleRoute = (mentorName: string) => {
     console.log(`Routing to /datatable?mentor=${mentorName}`);
     router.push(`/datatable?mentor=${mentorName}`);
+  };
+  const handleExportClick = async () => {
+    try {
+      await generateSummaryPDF();
+      console.log("PDF generated successfully.");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+    }
   };
 
   return (
@@ -59,7 +68,12 @@ export default function Header() {
           </Menubar>
         )}
       </div>
-      <h1 className="text-white text-3xl pr-10 font-bold">Attendance Marker</h1>
+      <button
+        onClick={handleExportClick}
+        className="text-white text-3xl pr-10 font-bold border border-black flex items-center justify-center"
+      >
+        Export Summary
+      </button>
     </header>
   );
 }

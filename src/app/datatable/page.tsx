@@ -56,18 +56,11 @@ const generatePDF = (data: Student[]) => {
     (a, b) => parseInt(a.id) - parseInt(b.id)
   );
   const doc = new jsPDF();
-  const tableColumn = [
-    "Roll Number",
-    "Name",
-    "Total Absent",
-    "Today",
-    "Reason",
-  ];
+  const tableColumn = ["Roll Number", "Name", "Total Absent", "Reason"];
   const tableRows = sortedData.map((student) => [
     student.id,
     student.name,
     student.totalAbsent,
-    student.today,
     student.reasonToday,
   ]);
 
@@ -109,7 +102,7 @@ export default function DataTable() {
     const fetchData = async () => {
       const { data: mentor, error } = await supabase
         .from("Mentors")
-        .select("id")
+        .select("id, students_present, students_absent")
         .eq("name", mentorName)
         .single();
 
@@ -211,8 +204,15 @@ export default function DataTable() {
 
     try {
       for (const row of data) {
-        const { id, today, totalPresent, totalDays, leaveDates, reasonToday } =
-          row;
+        const {
+          id,
+          today,
+          totalPresent,
+          totalAbsent,
+          totalDays,
+          leaveDates,
+          reasonToday,
+        } = row;
         const updatedTotalDays = totalDays + 1;
         let newTotalPresent = totalPresent;
 
@@ -242,9 +242,31 @@ export default function DataTable() {
           }
         } else {
           absentCount += 1;
-          const newLeaveDates = leaveDates.includes(currentDate)
-            ? leaveDates
-            : [...leaveDates, currentDate];
+
+          // Fetch existing leave details for the student
+          const { data: leaveData, error: leaveFetchError } = await supabase
+            .from("LeaveDetails")
+            .select("leave_dates, reason")
+            .eq("student_roll_no", id)
+            .single();
+
+          if (leaveFetchError) {
+            throw new Error(
+              `Error fetching leave details for student ${id}: ${leaveFetchError.message}`
+            );
+          }
+
+          // Append the new leave date and reason to the existing arrays
+          const existingLeaveDates = leaveData?.leave_dates || [];
+          const existingReasons = leaveData?.reason || [];
+
+          const newLeaveDates = existingLeaveDates.includes(currentDate)
+            ? existingLeaveDates
+            : [...existingLeaveDates, currentDate];
+
+          const newReasons = reasonToday
+            ? [...existingReasons, reasonToday]
+            : [...existingReasons, "No reason provided"];
 
           const attendancePercentage = (
             (newTotalPresent / updatedTotalDays) *
@@ -266,20 +288,34 @@ export default function DataTable() {
             );
           }
 
-          const { error: leaveError } = await supabase
+          // Update the LeaveDetails table with the appended leave dates and reasons
+          const { error: leaveUpdateError } = await supabase
             .from("LeaveDetails")
-            .upsert({
-              student_roll_no: id,
-              leave_dates: newLeaveDates, // Properly formatted array
-              reason: reasonToday ? [reasonToday] : ["No reason provided"], // Ensure this is an array
-            });
+            .update({
+              leave_dates: newLeaveDates, // Updated array of leave dates
+              reason: newReasons, // Updated array of reasons
+            })
+            .eq("student_roll_no", id);
 
-          if (leaveError) {
+          if (leaveUpdateError) {
             throw new Error(
-              `Error updating leave details for student ${id}: ${leaveError.message}`
+              `Error updating leave details for student ${id}: ${leaveUpdateError.message}`
             );
           }
         }
+      }
+      const { error: mentorUpdateError } = await supabase
+        .from("Mentors")
+        .update({
+          students_present: presentCount,
+          students_absent: absentCount,
+        })
+        .eq("name", mentorName); // Assuming you have mentorName available
+
+      if (mentorUpdateError) {
+        throw new Error(
+          `Error updating mentor's present/absent count: ${mentorUpdateError.message}`
+        );
       }
 
       console.log(
